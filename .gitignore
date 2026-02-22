@@ -2,3 +2,13 @@ node_modules
 dist
 .DS_Store
 *.local
+
+# Claude Code
+CLAUDE.md
+claude-code-prompt.md
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
