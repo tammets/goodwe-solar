@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@theme {
+  --color-solar-green: #22C55E;
+  --color-solar-yellow: #EAB308;
+  --color-solar-green-dark: #16A34A;
+  --color-solar-yellow-dark: #CA8A04;
+}
+
+@keyframes power-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-power-pulse {
+  animation: power-pulse 2s ease-in-out infinite;
+}
+
+.transition-numbers {
+  transition: all 0.5s ease-out;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #1f2937 25%, #374151 50%, #1f2937 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 0.5rem;
+}
