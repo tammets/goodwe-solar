@@ -59,7 +59,7 @@ Live at: https://tammets.github.io/goodwe-solar/
 
 ## CORS Proxy
 
-All SEMS API calls go through a Cloudflare Worker proxy. The proxy URL is configurable on the login screen and defaults to `https://sems-proxy.tammets.workers.dev/`.
+All SEMS API calls go through a Cloudflare Worker CORS proxy since the SEMS Portal API doesn't support CORS. The proxy URL is configurable on the login screen.
 
 ## License
 
