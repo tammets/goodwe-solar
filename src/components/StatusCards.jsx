@@ -1,7 +1,7 @@
 import { Zap, Sun, Calendar, BarChart3, DollarSign, Activity, Moon } from 'lucide-react'
 import { formatPower, formatEnergy, formatCurrency, getInverterStatus, isNightTime } from '../utils/formatters'
 
-function StatusCard({ icon: Icon, label, value, unit, accent, pulse }) {
+function StatusCard({ icon: Icon, label, value, unit, accent, pulse, subtitle }) {
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 shadow-lg">
       <div className="flex items-center gap-2 mb-2">
@@ -12,11 +12,12 @@ function StatusCard({ icon: Icon, label, value, unit, accent, pulse }) {
         {value}
         {unit && <span className="text-sm font-normal text-gray-400 ml-1">{unit}</span>}
       </div>
+      {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
     </div>
   )
 }
 
-export default function StatusCards({ kpi, info }) {
+export default function StatusCards({ kpi, info, spotIncome }) {
   const status = getInverterStatus(info?.status)
   const pac = kpi?.pac || 0
   const isSleeping = isNightTime() && info?.status !== 1
@@ -63,8 +64,13 @@ export default function StatusCards({ kpi, info }) {
       <StatusCard
         icon={DollarSign}
         label="Today's Income"
-        value={formatCurrency(kpi?.day_income, kpi?.currency)}
+        value={spotIncome
+          ? formatCurrency(spotIncome.totalIncome, 'EUR')
+          : formatCurrency(kpi?.day_income, kpi?.currency)}
         accent="text-solar-yellow"
+        subtitle={spotIncome?.currentSpotPrice != null
+          ? `Now: ${spotIncome.currentSpotPrice.toFixed(1)} | Avg: ${spotIncome.avgPrice.toFixed(1)} €/MWh`
+          : null}
       />
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 shadow-lg">
         <div className="flex items-center gap-2 mb-2">

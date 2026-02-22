@@ -1,5 +1,5 @@
-import { MapPin, Building, Calendar, Wallet, Cpu } from 'lucide-react'
-import { formatDate, formatCurrency } from '../utils/formatters'
+import { MapPin, Building, Calendar, Cpu } from 'lucide-react'
+import { formatDate } from '../utils/formatters'
 
 function InfoRow({ icon: Icon, label, value }) {
   return (
@@ -13,7 +13,7 @@ function InfoRow({ icon: Icon, label, value }) {
   )
 }
 
-export default function PlantInfo({ info, kpi }) {
+export default function PlantInfo({ info }) {
   if (!info) return null
 
   return (
@@ -40,11 +40,6 @@ export default function PlantInfo({ info, kpi }) {
           icon={Calendar}
           label="Online Since"
           value={formatDate(info.turnon_time)}
-        />
-        <InfoRow
-          icon={Wallet}
-          label="Total Income"
-          value={formatCurrency(kpi?.total_income, kpi?.currency)}
         />
       </div>
     </div>

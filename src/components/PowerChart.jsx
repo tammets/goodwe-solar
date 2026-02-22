@@ -1,21 +1,40 @@
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceDot } from 'recharts'
+import { AreaChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceDot } from 'recharts'
 import { useMemo } from 'react'
 
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null
+  const power = payload.find(p => p.dataKey === 'power')
+  const price = payload.find(p => p.dataKey === 'spotPrice')
   return (
     <div className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 shadow-lg">
       <p className="text-gray-300 text-sm">{label}</p>
-      <p className="text-solar-green font-semibold">{payload[0].value.toFixed(2)} kW</p>
+      {power && <p className="text-solar-green font-semibold">{power.value.toFixed(2)} kW</p>}
+      {price?.value != null && <p className="text-solar-yellow font-semibold">{price.value.toFixed(1)} €/MWh</p>}
     </div>
   )
 }
 
-export default function PowerChart({ data }) {
+export default function PowerChart({ data, hourlyPrices }) {
   const peak = useMemo(() => {
     if (!data?.length) return null
     return data.reduce((max, d) => (d.power > (max?.power || 0) ? d : max), null)
   }, [data])
+
+  const mergedData = useMemo(() => {
+    if (!data?.length) return []
+    if (!hourlyPrices?.size) return data
+
+    return data.map(point => {
+      const [h] = point.time.split(':').map(Number)
+      return { ...point, spotPrice: hourlyPrices.get(h) ?? null }
+    })
+  }, [data, hourlyPrices])
+
+  const priceRange = useMemo(() => {
+    if (!hourlyPrices?.size) return null
+    const values = [...hourlyPrices.values()]
+    return { min: Math.min(...values), max: Math.max(...values) }
+  }, [hourlyPrices])
 
   if (!data || data.length === 0) {
     return (
@@ -39,7 +58,7 @@ export default function PowerChart({ data }) {
         )}
       </div>
       <ResponsiveContainer width="100%" height={300}>
-        <AreaChart data={data}>
+        <AreaChart data={mergedData}>
           <defs>
             <linearGradient id="powerGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#22C55E" stopOpacity={0.3} />
@@ -54,22 +73,48 @@ export default function PowerChart({ data }) {
             tickLine={{ stroke: '#4B5563' }}
           />
           <YAxis
+            yAxisId="power"
             stroke="#9CA3AF"
             tick={{ fill: '#9CA3AF', fontSize: 12 }}
             tickLine={{ stroke: '#4B5563' }}
             tickFormatter={(v) => `${v}`}
             label={{ value: 'kW', position: 'insideTopLeft', fill: '#9CA3AF', fontSize: 12 }}
           />
+          {priceRange && (
+            <YAxis
+              yAxisId="price"
+              orientation="right"
+              stroke="#EAB308"
+              tick={{ fill: '#EAB308', fontSize: 11 }}
+              tickLine={{ stroke: '#EAB308' }}
+              domain={[Math.floor(priceRange.min * 0.8), Math.ceil(priceRange.max * 1.2)]}
+              label={{ value: '€/MWh', position: 'insideTopRight', fill: '#EAB308', fontSize: 11 }}
+            />
+          )}
           <Tooltip content={<CustomTooltip />} />
           <Area
+            yAxisId="power"
             type="monotone"
             dataKey="power"
             stroke="#22C55E"
             fill="url(#powerGradient)"
             strokeWidth={2}
           />
+          {priceRange && (
+            <Line
+              yAxisId="price"
+              type="stepAfter"
+              dataKey="spotPrice"
+              stroke="#EAB308"
+              strokeWidth={1.5}
+              strokeOpacity={0.6}
+              dot={false}
+              connectNulls
+            />
+          )}
           {peak && peak.power > 0 && (
             <ReferenceDot
+              yAxisId="power"
               x={peak.time}
               y={peak.power}
               r={4}
