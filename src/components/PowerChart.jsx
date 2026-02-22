@@ -80,17 +80,21 @@ export default function PowerChart({ data, hourlyPrices }) {
             tickFormatter={(v) => `${v}`}
             label={{ value: 'kW', position: 'insideTopLeft', fill: '#9CA3AF', fontSize: 12 }}
           />
-          {priceRange && (
-            <YAxis
-              yAxisId="price"
-              orientation="right"
-              stroke="#EAB308"
-              tick={{ fill: '#EAB308', fontSize: 11 }}
-              tickLine={{ stroke: '#EAB308' }}
-              domain={[Math.floor(priceRange.min * 0.8), Math.ceil(priceRange.max * 1.2)]}
-              label={{ value: '€/MWh', position: 'insideTopRight', fill: '#EAB308', fontSize: 11 }}
-            />
-          )}
+          <YAxis
+            yAxisId="price"
+            orientation="right"
+            stroke="#EAB308"
+            tick={priceRange ? { fill: '#EAB308', fontSize: 11 } : false}
+            tickLine={priceRange ? { stroke: '#EAB308' } : false}
+            axisLine={!!priceRange}
+            domain={priceRange
+              ? [Math.floor(priceRange.min * 0.8), Math.ceil(priceRange.max * 1.2)]
+              : [0, 100]}
+            label={priceRange
+              ? { value: '€/MWh', position: 'insideTopRight', fill: '#EAB308', fontSize: 11 }
+              : undefined}
+            width={priceRange ? undefined : 0}
+          />
           <Tooltip content={<CustomTooltip />} />
           <Area
             yAxisId="power"
