@@ -14,7 +14,7 @@ function getStoredSellingFee() {
   }
 }
 
-export function useNordPoolIncome(chartData) {
+export function useNordPoolIncome(proxyUrl, chartData) {
   const [hourlyPrices, setHourlyPrices] = useState(null)
   const [spotError, setSpotError] = useState(null)
   const [sellingFee, setSellingFee] = useState(getStoredSellingFee)
@@ -22,9 +22,10 @@ export function useNordPoolIncome(chartData) {
   const dateStr = getTodayDate()
 
   useEffect(() => {
+    if (!proxyUrl) return
     let cancelled = false
 
-    fetchNordPoolPrices(dateStr)
+    fetchNordPoolPrices(proxyUrl, dateStr)
       .then(prices15min => {
         if (!cancelled) {
           setHourlyPrices(aggregateHourlyPrices(prices15min))
@@ -35,7 +36,7 @@ export function useNordPoolIncome(chartData) {
       })
 
     return () => { cancelled = true }
-  }, [dateStr])
+  }, [proxyUrl, dateStr])
 
   const spotIncome = useMemo(() => {
     if (!chartData || !hourlyPrices) return null

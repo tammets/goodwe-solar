@@ -12,10 +12,10 @@ import HistoryView from './HistoryView'
 import { DashboardSkeleton } from './LoadingSkeleton'
 
 export default function Dashboard() {
-  const { auth } = useAuth()
+  const { auth, credentials } = useAuth()
   const { plantData, chartData, inverterData, loading, error, refresh, fetchHistory } = useSemsApi()
   useAutoRefresh(refresh, auth.isAuthenticated)
-  const { spotIncome, hourlyPrices, sellingFee, updateSellingFee } = useNordPoolIncome(chartData)
+  const { spotIncome, hourlyPrices, sellingFee, updateSellingFee } = useNordPoolIncome(credentials.proxyUrl, chartData)
 
   return (
     <div className="min-h-screen bg-gray-950">

@@ -2,10 +2,12 @@ const ELERING_API = 'https://dashboard.elering.ee/api/nps/price'
 
 /**
  * Fetch today's Nord Pool spot prices for Estonia (15-min intervals).
+ * Routed through CORS proxy (same as SEMS API).
+ * @param {string} proxyUrl - CORS proxy URL
  * @param {string} dateStr - "YYYY-MM-DD"
  * @returns {Promise<Array<{timestamp: number, price: number}>>}
  */
-export async function fetchNordPoolPrices(dateStr) {
+export async function fetchNordPoolPrices(proxyUrl, dateStr) {
   const startLocal = new Date(`${dateStr}T00:00:00`)
   const endLocal = new Date(`${dateStr}T23:59:59`)
 
@@ -14,7 +16,13 @@ export async function fetchNordPoolPrices(dateStr) {
     end: endLocal.toISOString(),
   })
 
-  const res = await fetch(`${ELERING_API}?${params}`)
+  const targetUrl = `${ELERING_API}?${params}`
+
+  const res = await fetch(proxyUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url: targetUrl, method: 'GET' }),
+  })
   if (!res.ok) throw new Error(`Elering API error: ${res.status}`)
 
   const json = await res.json()
