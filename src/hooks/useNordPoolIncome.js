@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
-import { fetchNordPoolPrices, aggregateHourlyPrices, calculateSpotIncome } from '../utils/nordpool'
-import { getTodayDate } from '../utils/formatters'
+import { fetchNordPoolPrices, aggregateHourlyPrices, calculateSpotIncome, estimateSpotIncome } from '../utils/nordpool'
+import { getTodayDate, getSunTimes } from '../utils/formatters'
 
 const SELLING_FEE_KEY = 'goodwe-solar-selling-fee'
 const DEFAULT_SELLING_FEE = 0.018
@@ -14,7 +14,7 @@ function getStoredSellingFee() {
   }
 }
 
-export function useNordPoolIncome(proxyUrl, chartData) {
+export function useNordPoolIncome(proxyUrl, chartData, todayKwh, latitude) {
   const [hourlyPrices, setHourlyPrices] = useState(null)
   const [spotError, setSpotError] = useState(null)
   const [sellingFee, setSellingFee] = useState(getStoredSellingFee)
@@ -38,10 +38,19 @@ export function useNordPoolIncome(proxyUrl, chartData) {
     return () => { cancelled = true }
   }, [proxyUrl, dateStr])
 
+  const sunTimes = useMemo(() => latitude != null ? getSunTimes(latitude) : null, [latitude])
+
   const spotIncome = useMemo(() => {
-    if (!chartData || !hourlyPrices) return null
-    return calculateSpotIncome(chartData, hourlyPrices, sellingFee, dateStr)
-  }, [chartData, hourlyPrices, sellingFee, dateStr])
+    if (!hourlyPrices) return null
+    // Use detailed power curve calculation if available, otherwise estimate from total kWh
+    if (chartData?.length) {
+      return calculateSpotIncome(chartData, hourlyPrices, sellingFee, dateStr)
+    }
+    if (todayKwh) {
+      return estimateSpotIncome(todayKwh, hourlyPrices, sellingFee, sunTimes)
+    }
+    return calculateSpotIncome([], hourlyPrices, sellingFee, dateStr)
+  }, [chartData, todayKwh, hourlyPrices, sellingFee, dateStr, sunTimes])
 
   const updateSellingFee = (newFee) => {
     localStorage.setItem(SELLING_FEE_KEY, String(newFee))

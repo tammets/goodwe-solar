@@ -42,7 +42,41 @@ export function getInverterStatus(statusCode) {
   }
 }
 
-export function isNightTime() {
+/**
+ * Calculate sunrise/sunset hours for a given latitude and date.
+ * Uses the NOAA solar calculator simplified algorithm.
+ * @param {number} lat - Latitude in degrees
+ * @param {Date} [date] - Date (defaults to today)
+ * @returns {{sunrise: number, sunset: number}} Hours as decimals (e.g. 7.5 = 07:30)
+ */
+export function getSunTimes(lat, date = new Date()) {
+  const rad = Math.PI / 180
+  const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000)
+  const declination = -23.45 * Math.cos(rad * (360 / 365) * (dayOfYear + 10))
+  const latRad = lat * rad
+  const declRad = declination * rad
+  const cosHourAngle = -Math.tan(latRad) * Math.tan(declRad)
+
+  // Handle polar day/night
+  if (cosHourAngle < -1) return { sunrise: 0, sunset: 24 }
+  if (cosHourAngle > 1) return { sunrise: 12, sunset: 12 }
+
+  const hourAngle = Math.acos(cosHourAngle) / rad
+  const sunrise = 12 - hourAngle / 15
+  const sunset = 12 + hourAngle / 15
+
+  return {
+    sunrise: Math.round(sunrise * 10) / 10,
+    sunset: Math.round(sunset * 10) / 10,
+  }
+}
+
+export function isNightTime(lat) {
+  if (lat != null) {
+    const { sunrise, sunset } = getSunTimes(lat)
+    const hour = new Date().getHours() + new Date().getMinutes() / 60
+    return hour < sunrise || hour >= sunset
+  }
   const hour = new Date().getHours()
   return hour < 7 || hour >= 21
 }

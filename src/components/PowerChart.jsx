@@ -1,133 +1,97 @@
-import { AreaChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceDot } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts'
 import { useMemo } from 'react'
 
-function CustomTooltip({ active, payload, label }) {
+function PriceTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null
-  const power = payload.find(p => p.dataKey === 'power')
-  const price = payload.find(p => p.dataKey === 'spotPrice')
+  const price = payload[0]?.value
   return (
     <div className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 shadow-lg">
-      <p className="text-gray-300 text-sm">{label}</p>
-      {power && <p className="text-solar-green font-semibold">{power.value.toFixed(2)} kW</p>}
-      {price?.value != null && <p className="text-solar-yellow font-semibold">{price.value.toFixed(1)} €/MWh</p>}
+      <p className="text-gray-300 text-sm">{label}:00</p>
+      <p className="text-solar-yellow font-semibold">{price?.toFixed(2)} €/MWh</p>
+      <p className="text-gray-400 text-xs">{(price / 1000 * 100).toFixed(2)} cents/kWh</p>
     </div>
   )
 }
 
-export default function PowerChart({ data, hourlyPrices }) {
-  const peak = useMemo(() => {
-    if (!data?.length) return null
-    return data.reduce((max, d) => (d.power > (max?.power || 0) ? d : max), null)
-  }, [data])
+export default function SpotPriceChart({ hourlyPrices }) {
+  const { chartData, currentHour, avgPrice } = useMemo(() => {
+    if (!hourlyPrices?.size) return { chartData: [], currentHour: -1, avgPrice: 0 }
 
-  const mergedData = useMemo(() => {
-    if (!data?.length) return []
-    if (!hourlyPrices?.size) return data
+    const now = new Date().getHours()
+    const data = []
+    let sum = 0
+    let count = 0
 
-    return data.map(point => {
-      const [h] = point.time.split(':').map(Number)
-      return { ...point, spotPrice: hourlyPrices.get(h) ?? null }
-    })
-  }, [data, hourlyPrices])
+    for (let h = 0; h < 24; h++) {
+      const price = hourlyPrices.get(h)
+      if (price != null) {
+        data.push({ hour: String(h).padStart(2, '0'), price })
+        sum += price
+        count++
+      }
+    }
 
-  const priceRange = useMemo(() => {
-    if (!hourlyPrices?.size) return null
-    const values = [...hourlyPrices.values()]
-    return { min: Math.min(...values), max: Math.max(...values) }
+    return {
+      chartData: data,
+      currentHour: now,
+      avgPrice: count > 0 ? sum / count : 0,
+    }
   }, [hourlyPrices])
 
-  if (!data || data.length === 0) {
+  if (!chartData.length) {
     return (
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-        <h2 className="text-lg font-semibold text-gray-100 mb-4">Today's Power Curve</h2>
+        <h2 className="text-lg font-semibold text-gray-100 mb-4">Today's Spot Price</h2>
         <div className="h-64 flex items-center justify-center text-gray-500">
-          No data available yet
+          No price data available
         </div>
       </div>
     )
   }
 
+  const currentPrice = hourlyPrices.get(currentHour)
+
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-100">Today's Power Curve</h2>
-        {peak && peak.power > 0 && (
-          <span className="text-sm text-gray-400">
-            Peak: <span className="text-solar-green font-medium">{peak.power.toFixed(2)} kW</span> at {peak.time}
-          </span>
-        )}
+        <h2 className="text-lg font-semibold text-gray-100">Today's Spot Price</h2>
+        <span className="text-sm text-gray-400">
+          Now: <span className="text-solar-yellow font-medium">{currentPrice?.toFixed(1)} €/MWh</span>
+          {' | '}Avg: <span className="text-gray-300">{avgPrice.toFixed(1)}</span>
+        </span>
       </div>
       <ResponsiveContainer width="100%" height={300}>
-        <AreaChart data={mergedData}>
-          <defs>
-            <linearGradient id="powerGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#22C55E" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#22C55E" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+        <BarChart data={chartData}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
           <XAxis
-            dataKey="time"
+            dataKey="hour"
             stroke="#9CA3AF"
             tick={{ fill: '#9CA3AF', fontSize: 12 }}
             tickLine={{ stroke: '#4B5563' }}
           />
           <YAxis
-            yAxisId="power"
             stroke="#9CA3AF"
             tick={{ fill: '#9CA3AF', fontSize: 12 }}
             tickLine={{ stroke: '#4B5563' }}
-            tickFormatter={(v) => `${v}`}
-            label={{ value: 'kW', position: 'insideTopLeft', fill: '#9CA3AF', fontSize: 12 }}
+            label={{ value: '€/MWh', position: 'insideTopLeft', fill: '#9CA3AF', fontSize: 12 }}
           />
-          <YAxis
-            yAxisId="price"
-            orientation="right"
-            stroke="#EAB308"
-            tick={priceRange ? { fill: '#EAB308', fontSize: 11 } : false}
-            tickLine={priceRange ? { stroke: '#EAB308' } : false}
-            axisLine={!!priceRange}
-            domain={priceRange
-              ? [Math.floor(priceRange.min * 0.8), Math.ceil(priceRange.max * 1.2)]
-              : [0, 100]}
-            label={priceRange
-              ? { value: '€/MWh', position: 'insideTopRight', fill: '#EAB308', fontSize: 11 }
-              : undefined}
-            width={priceRange ? undefined : 0}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <Area
-            yAxisId="power"
-            type="monotone"
-            dataKey="power"
-            stroke="#22C55E"
-            fill="url(#powerGradient)"
-            strokeWidth={2}
-          />
-          {priceRange && (
-            <Line
-              yAxisId="price"
-              type="stepAfter"
-              dataKey="spotPrice"
-              stroke="#EAB308"
-              strokeWidth={1.5}
-              strokeOpacity={0.6}
-              dot={false}
-              connectNulls
-            />
-          )}
-          {peak && peak.power > 0 && (
-            <ReferenceDot
-              yAxisId="power"
-              x={peak.time}
-              y={peak.power}
-              r={4}
-              fill="#22C55E"
-              stroke="#fff"
-              strokeWidth={2}
-            />
-          )}
-        </AreaChart>
+          <Tooltip content={<PriceTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+          <ReferenceLine y={avgPrice} stroke="#6B7280" strokeDasharray="4 4" />
+          <Bar dataKey="price" radius={[2, 2, 0, 0]}>
+            {chartData.map((entry, i) => {
+              const h = Number(entry.hour)
+              const isCurrent = h === currentHour
+              const isPast = h < currentHour
+              return (
+                <Cell
+                  key={i}
+                  fill={isCurrent ? '#EAB308' : isPast ? '#CA8A04' : '#854D0E'}
+                  opacity={isCurrent ? 1 : isPast ? 0.8 : 0.4}
+                />
+              )
+            })}
+          </Bar>
+        </BarChart>
       </ResponsiveContainer>
     </div>
   )

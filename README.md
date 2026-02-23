@@ -12,7 +12,7 @@ Hosted on GitHub Pages — no backend required.
 - Historical view: day, month, and year charts
 - Weather conditions from SEMS API
 - Inverter details (AC phases, DC strings, temperature)
-- Income tracking (daily and total)
+- Nord Pool spot price income tracking (via Elering API)
 - Dark theme, responsive layout
 - Login with SEMS Portal credentials, optional "remember me"
 - Silent token refresh every 25 minutes
@@ -59,7 +59,7 @@ Live at: https://tammets.github.io/goodwe-solar/
 
 ## CORS Proxy
 
-All SEMS API calls go through a Cloudflare Worker CORS proxy since the SEMS Portal API doesn't support CORS. The proxy URL is configurable on the login screen.
+All external API calls (SEMS Portal and Elering Nord Pool) go through a Cloudflare Worker CORS proxy. The proxy URL is configurable on the login screen.
 
 ## License
 

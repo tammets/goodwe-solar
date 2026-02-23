@@ -65,8 +65,11 @@ export function aggregateHourlyPrices(prices15min) {
  * @returns {{totalIncome: number, totalEnergy: number, avgPrice: number, currentSpotPrice: number|null}}
  */
 export function calculateSpotIncome(powerPoints, hourlyPrices, sellingFee = 0, dateStr) {
+  const currentHour = new Date().getHours()
+  const currentSpotPrice = hourlyPrices?.get(currentHour) ?? null
+
   if (!powerPoints?.length || !hourlyPrices?.size) {
-    return { totalIncome: 0, totalEnergy: 0, avgPrice: 0, currentSpotPrice: null }
+    return { totalIncome: 0, totalEnergy: 0, avgPrice: 0, currentSpotPrice }
   }
 
   const pointsWithTimestamp = powerPoints.map(p => {
@@ -101,12 +104,53 @@ export function calculateSpotIncome(powerPoints, hourlyPrices, sellingFee = 0, d
   }
 
   const avgPrice = totalEnergy > 0 ? weightedPriceSum / totalEnergy : 0
-  const currentHour = new Date().getHours()
-  const currentSpotPrice = hourlyPrices.get(currentHour) ?? null
 
   return {
     totalIncome: Math.round(totalIncome * 10000) / 10000,
     totalEnergy: Math.round(totalEnergy * 100) / 100,
+    avgPrice: Math.round(avgPrice * 100) / 100,
+    currentSpotPrice,
+  }
+}
+
+/**
+ * Estimate income using total kWh and weighted average spot price during daylight hours.
+ * Uses sunrise/sunset to only average prices when solar production is possible.
+ * @param {number} todayKwh - today's total generation from SEMS KPI
+ * @param {Map<number, number>} hourlyPrices - hour -> EUR/MWh
+ * @param {number} sellingFee - EUR/kWh fee
+ * @param {{sunrise: number, sunset: number}} sunTimes - sunrise/sunset as decimal hours
+ */
+export function estimateSpotIncome(todayKwh, hourlyPrices, sellingFee = 0, sunTimes) {
+  if (!todayKwh || !hourlyPrices?.size) {
+    const currentHour = new Date().getHours()
+    return { totalIncome: 0, avgPrice: 0, currentSpotPrice: hourlyPrices?.get(currentHour) ?? null }
+  }
+
+  const currentHour = new Date().getHours()
+  const currentSpotPrice = hourlyPrices.get(currentHour) ?? null
+
+  const sunriseHour = Math.floor(sunTimes?.sunrise ?? 7)
+  const sunsetHour = Math.ceil(sunTimes?.sunset ?? 21)
+  const endHour = Math.min(sunsetHour, currentHour)
+
+  // Average spot price across daylight hours up to now
+  let priceSum = 0
+  let priceCount = 0
+  for (const [hour, price] of hourlyPrices) {
+    if (hour >= sunriseHour && hour <= endHour) {
+      priceSum += price
+      priceCount++
+    }
+  }
+
+  const avgPrice = priceCount > 0 ? priceSum / priceCount : 0
+  const avgPriceEurKwh = avgPrice / 1000
+  const netPrice = avgPriceEurKwh - sellingFee
+  const totalIncome = todayKwh * netPrice
+
+  return {
+    totalIncome: Math.round(totalIncome * 10000) / 10000,
     avgPrice: Math.round(avgPrice * 100) / 100,
     currentSpotPrice,
   }

@@ -4,18 +4,19 @@ import { useAutoRefresh } from '../hooks/useAutoRefresh'
 import { useNordPoolIncome } from '../hooks/useNordPoolIncome'
 import Header from './Header'
 import StatusCards from './StatusCards'
-import PowerChart from './PowerChart'
+import SpotPriceChart from './PowerChart'
 import WeatherCard from './WeatherCard'
 import PlantInfo from './PlantInfo'
 import InverterDetails from './InverterDetails'
-import HistoryView from './HistoryView'
 import { DashboardSkeleton } from './LoadingSkeleton'
 
 export default function Dashboard() {
   const { auth, credentials } = useAuth()
-  const { plantData, chartData, inverterData, loading, error, refresh, fetchHistory } = useSemsApi()
+  const { plantData, inverterData, loading, error, refresh } = useSemsApi()
   useAutoRefresh(refresh, auth.isAuthenticated)
-  const { spotIncome, hourlyPrices, sellingFee, updateSellingFee } = useNordPoolIncome(credentials.proxyUrl, chartData)
+  const todayKwh = plantData?.kpi?.power ? Number(plantData.kpi.power) : 0
+  const latitude = plantData?.info?.latitude ? Number(plantData.info.latitude) : null
+  const { spotIncome, hourlyPrices, sellingFee, updateSellingFee } = useNordPoolIncome(credentials.proxyUrl, null, todayKwh, latitude)
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -46,7 +47,7 @@ export default function Dashboard() {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
-              <PowerChart data={chartData} hourlyPrices={hourlyPrices} />
+              <SpotPriceChart hourlyPrices={hourlyPrices} />
             </div>
             <div className="space-y-6">
               <WeatherCard weather={plantData?.weather} />
@@ -55,7 +56,6 @@ export default function Dashboard() {
           </div>
 
           <InverterDetails data={inverterData} />
-          <HistoryView fetchHistory={fetchHistory} />
         </main>
       )}
     </div>

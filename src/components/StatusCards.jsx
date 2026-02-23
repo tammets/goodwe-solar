@@ -70,7 +70,7 @@ export default function StatusCards({ kpi, info, spotIncome }) {
         accent="text-solar-yellow"
         subtitle={spotIncome?.currentSpotPrice != null
           ? `Now: ${spotIncome.currentSpotPrice.toFixed(1)} | Avg: ${spotIncome.avgPrice.toFixed(1)} €/MWh`
-          : spotIncome ? null : 'GoodWe estimate'}
+          : !spotIncome ? 'GoodWe estimate' : null}
       />
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 shadow-lg">
         <div className="flex items-center gap-2 mb-2">
