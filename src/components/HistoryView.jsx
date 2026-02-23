@@ -4,12 +4,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
 import { getTodayDate } from '../utils/formatters'
-
-const RANGE_OPTIONS = [
-  { value: 1, label: 'Day' },
-  { value: 2, label: 'Month' },
-  { value: 3, label: 'Year' },
-]
+import { useLanguage } from '../context/LanguageContext'
 
 function HistoryTooltip({ active, payload, label, range }) {
   if (!active || !payload?.length) return null
@@ -23,6 +18,14 @@ function HistoryTooltip({ active, payload, label, range }) {
 }
 
 export default function HistoryView({ fetchHistory }) {
+  const { t } = useLanguage()
+
+  const RANGE_OPTIONS = [
+    { value: 1, label: t('history_day') },
+    { value: 2, label: t('history_month') },
+    { value: 3, label: t('history_year') },
+  ]
+
   const [range, setRange] = useState(1)
   const [date, setDate] = useState(getTodayDate())
   const [data, setData] = useState(null)
@@ -36,11 +39,11 @@ export default function HistoryView({ fetchHistory }) {
       const result = await fetchHistory(newDate, newRange)
       setData(result)
     } catch (err) {
-      setError(err.message || 'Failed to load history')
+      setError(err.message || t('history_loadError'))
     } finally {
       setLoading(false)
     }
-  }, [fetchHistory])
+  }, [fetchHistory, t])
 
   const handleRangeChange = (newRange) => {
     setRange(newRange)
@@ -59,7 +62,7 @@ export default function HistoryView({ fetchHistory }) {
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-        <h2 className="text-lg font-semibold text-gray-100">History</h2>
+        <h2 className="text-lg font-semibold text-gray-100">{t('history_title')}</h2>
 
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex bg-gray-800 rounded-lg p-0.5">
@@ -112,7 +115,7 @@ export default function HistoryView({ fetchHistory }) {
         </div>
       ) : !data || data.length === 0 ? (
         <div className="h-64 flex items-center justify-center text-gray-500">
-          {data === null ? 'Select a date to view history' : 'No data for this period'}
+          {data === null ? t('history_selectDate') : t('history_noData')}
         </div>
       ) : range === 1 ? (
         <ResponsiveContainer width="100%" height={280}>

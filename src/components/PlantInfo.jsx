@@ -1,5 +1,6 @@
 import { MapPin, Building, Calendar, Cpu } from 'lucide-react'
 import { formatDate } from '../utils/formatters'
+import { useLanguage } from '../context/LanguageContext'
 
 function InfoRow({ icon: Icon, label, value }) {
   return (
@@ -14,31 +15,32 @@ function InfoRow({ icon: Icon, label, value }) {
 }
 
 export default function PlantInfo({ info }) {
+  const { t } = useLanguage()
   if (!info) return null
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-      <h2 className="text-lg font-semibold text-gray-100 mb-3">Plant Info</h2>
+      <h2 className="text-lg font-semibold text-gray-100 mb-3">{t('plant_title')}</h2>
 
       <div className="divide-y divide-gray-800">
         <InfoRow
           icon={Cpu}
-          label="System Capacity"
+          label={t('plant_capacity')}
           value={`${info.capacity} kW`}
         />
         <InfoRow
           icon={MapPin}
-          label="Location"
+          label={t('plant_location')}
           value={info.address}
         />
         <InfoRow
           icon={Building}
-          label="Installer"
+          label={t('plant_installer')}
           value={info.org_name}
         />
         <InfoRow
           icon={Calendar}
-          label="Online Since"
+          label={t('plant_onlineSince')}
           value={formatDate(info.turnon_time)}
         />
       </div>

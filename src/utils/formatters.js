@@ -32,13 +32,13 @@ export function formatDateTime(dateStr) {
 export function getInverterStatus(statusCode) {
   switch (statusCode) {
     case 1:
-      return { label: 'Online', color: 'bg-solar-green', textColor: 'text-solar-green' }
+      return { labelKey: 'inverterStatus_online', color: 'bg-solar-green', textColor: 'text-solar-green' }
     case 0:
-      return { label: 'Offline', color: 'bg-red-500', textColor: 'text-red-500' }
+      return { labelKey: 'inverterStatus_offline', color: 'bg-red-500', textColor: 'text-red-500' }
     case -1:
-      return { label: 'Standby', color: 'bg-solar-yellow', textColor: 'text-solar-yellow' }
+      return { labelKey: 'inverterStatus_standby', color: 'bg-solar-yellow', textColor: 'text-solar-yellow' }
     default:
-      return { label: 'Unknown', color: 'bg-gray-500', textColor: 'text-gray-500' }
+      return { labelKey: 'inverterStatus_unknown', color: 'bg-gray-500', textColor: 'text-gray-500' }
   }
 }
 

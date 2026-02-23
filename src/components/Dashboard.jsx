@@ -1,4 +1,5 @@
 import { useAuth } from '../context/AuthContext'
+import { useLanguage } from '../context/LanguageContext'
 import { useSemsApi } from '../hooks/useSemsApi'
 import { useAutoRefresh } from '../hooks/useAutoRefresh'
 import { useNordPoolIncome } from '../hooks/useNordPoolIncome'
@@ -12,6 +13,7 @@ import { DashboardSkeleton } from './LoadingSkeleton'
 
 export default function Dashboard() {
   const { auth, credentials } = useAuth()
+  const { t } = useLanguage()
   const { plantData, inverterData, loading, error, refresh } = useSemsApi()
   useAutoRefresh(refresh, auth.isAuthenticated)
   const todayKwh = plantData?.kpi?.power ? Number(plantData.kpi.power) : 0
@@ -33,7 +35,7 @@ export default function Dashboard() {
           <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 text-red-400 text-sm flex items-center justify-between">
             <span>{error}</span>
             <button onClick={refresh} className="text-red-300 hover:text-red-100 underline text-sm">
-              Retry
+              {t('dashboard_retry')}
             </button>
           </div>
         </div>

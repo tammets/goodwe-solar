@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Sun, HelpCircle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { useLanguage } from '../context/LanguageContext'
 
 export default function LoginScreen() {
   const { login, loginError, loginLoading } = useAuth()
+  const { language, setLanguage, t } = useLanguage()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [stationId, setStationId] = useState('')
@@ -25,37 +27,46 @@ export default function LoginScreen() {
       <div className="w-full max-w-md bg-gray-900 border border-gray-800 rounded-xl p-8 shadow-lg">
         <div className="flex items-center justify-center gap-3 mb-8">
           <Sun className="w-8 h-8 text-solar-yellow" />
-          <h1 className="text-2xl font-bold text-gray-100">GoodWe Solar Monitor</h1>
+          <h1 className="text-2xl font-bold text-gray-100">{t('login_title')}</h1>
+        </div>
+
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={() => setLanguage(language === 'et' ? 'en' : 'et')}
+            className="px-2 py-1 text-sm font-medium text-gray-400 hover:text-gray-100 transition-colors rounded-lg hover:bg-gray-800 uppercase tracking-wider"
+          >
+            {language === 'et' ? 'EN' : 'ET'}
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Email</label>
+            <label className="block text-sm text-gray-400 mb-1">{t('login_emailLabel')}</label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 placeholder-gray-500 focus:outline-none focus:border-solar-green transition-colors"
-              placeholder="your@email.com"
+              placeholder={t('login_emailPlaceholder')}
             />
           </div>
 
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Password</label>
+            <label className="block text-sm text-gray-400 mb-1">{t('login_passwordLabel')}</label>
             <input
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 placeholder-gray-500 focus:outline-none focus:border-solar-green transition-colors"
-              placeholder="SEMS Portal password"
+              placeholder={t('login_passwordPlaceholder')}
             />
           </div>
 
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <label className="text-sm text-gray-400">Power Station ID</label>
+              <label className="text-sm text-gray-400">{t('login_stationIdLabel')}</label>
               <button
                 type="button"
                 onClick={() => setShowHelp(!showHelp)}
@@ -66,7 +77,7 @@ export default function LoginScreen() {
             </div>
             {showHelp && (
               <p className="text-xs text-solar-yellow mb-2">
-                Find this in SEMS Portal &rarr; Plant Settings &rarr; look for the Plant ID (UUID format like f12061d2-9400-483a-9b97-0f38cea25c00)
+                {t('login_stationIdHelp')}
               </p>
             )}
             <input
@@ -80,7 +91,7 @@ export default function LoginScreen() {
           </div>
 
           <div>
-            <label className="block text-sm text-gray-400 mb-1">CORS Proxy URL</label>
+            <label className="block text-sm text-gray-400 mb-1">{t('login_proxyLabel')}</label>
             <input
               type="url"
               required
@@ -99,10 +110,10 @@ export default function LoginScreen() {
                 className="mt-1 accent-solar-green"
               />
               <span className="text-sm text-gray-400">
-                Remember me
+                {t('login_rememberMe')}
                 {rememberMe && (
                   <span className="block text-xs text-solar-yellow mt-1">
-                    Warning: Credentials will be stored in plaintext in your browser's localStorage
+                    {t('login_rememberWarning')}
                   </span>
                 )}
               </span>
@@ -120,7 +131,7 @@ export default function LoginScreen() {
             disabled={loginLoading}
             className="w-full bg-solar-green hover:bg-solar-green-dark text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loginLoading ? 'Connecting...' : 'Connect to SEMS'}
+            {loginLoading ? t('login_connecting') : t('login_submit')}
           </button>
         </form>
       </div>

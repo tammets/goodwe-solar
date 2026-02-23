@@ -1,5 +1,6 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts'
 import { useMemo } from 'react'
+import { useLanguage } from '../context/LanguageContext'
 
 function PriceTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null
@@ -14,6 +15,8 @@ function PriceTooltip({ active, payload, label }) {
 }
 
 export default function SpotPriceChart({ hourlyPrices }) {
+  const { t } = useLanguage()
+
   const { chartData, currentHour, avgPrice } = useMemo(() => {
     if (!hourlyPrices?.size) return { chartData: [], currentHour: -1, avgPrice: 0 }
 
@@ -41,9 +44,9 @@ export default function SpotPriceChart({ hourlyPrices }) {
   if (!chartData.length) {
     return (
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-        <h2 className="text-lg font-semibold text-gray-100 mb-4">Today's Spot Price</h2>
+        <h2 className="text-lg font-semibold text-gray-100 mb-4">{t('chart_title')}</h2>
         <div className="h-64 flex items-center justify-center text-gray-500">
-          No price data available
+          {t('chart_noData')}
         </div>
       </div>
     )
@@ -54,10 +57,10 @@ export default function SpotPriceChart({ hourlyPrices }) {
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-100">Today's Spot Price</h2>
+        <h2 className="text-lg font-semibold text-gray-100">{t('chart_title')}</h2>
         <span className="text-sm text-gray-400">
-          Now: <span className="text-solar-yellow font-medium">{currentPrice?.toFixed(1)} €/MWh</span>
-          {' | '}Avg: <span className="text-gray-300">{avgPrice.toFixed(1)}</span>
+          {t('chart_now')} <span className="text-solar-yellow font-medium">{currentPrice?.toFixed(1)} €/MWh</span>
+          {' | '}{t('chart_avg')} <span className="text-gray-300">{avgPrice.toFixed(1)}</span>
         </span>
       </div>
       <ResponsiveContainer width="100%" height={300}>
